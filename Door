@@ -1,0 +1,75 @@
+@name Door
+@persist Welded:entity Magnitude:vector Origin:vector Count Moved Progress
+@persist Radius Interval Steps Direction:vector Width Height [OSound CSound]:string 
+@autoupdate
+
+if(first()) {
+    runOnLast(1)
+
+    Welded = entity():isWeldedTo()
+    
+    Whitelist = array()
+    Radius = 50
+    Interval = 250
+    
+    Steps = 150
+    Direction = Welded:forward()
+    Width = 0.95
+    Height = 0.995
+    
+    OSound = "doors/doormove2.wav"
+    CSound = "doors/default_stop.wav"
+    
+    Magnitude = (positive(Welded:toWorldAxis(Welded:boxSize())) * Welded:toLocalAxis(Direction)) / Steps
+    Origin = Welded:massCenter()
+    
+    if(!Whitelist:count()) { 
+        findIncludeClass("player") 
+    } else { 
+        for(I=1,Whitelist:count()) { 
+            findIncludePlayer(Whitelist[I,string]) 
+        }
+    }
+    
+    Welded:setAlpha(0)
+    Welded:propFreeze(1)
+    
+    entity():setAlpha(0)
+    entity():propNotSolid(1)
+    
+    holoCreate(1, Welded:pos(), vec(1, Height, Width), Welded:angles(), Welded:getColor(), Welded:model())
+    holoMaterial(1, Welded:getMaterial())
+    holoParent(1, Welded)
+    
+    timer("search", Interval)
+}
+
+if(clk("search")) {
+    findInSphere(Origin, Radius)
+    Count = findToArray():count()
+    
+    runOnTick((Count > 0 & Progress != Steps) | (!Count & Progress != 0))
+    timer("search", Interval)
+} elseif(tickClk()) {
+    Moved = Count 
+    
+    if(Moved & Progress < Steps) { 
+        Progress++ 
+    } elseif(!Moved & Progress > 0) { 
+        Progress-- 
+    }
+    
+    if($Moved == 1 & Moved == 1) {
+        soundPlay(1, 5, OSound) 
+    } elseif(changed(Progress) & !Progress) { 
+        soundPlay(2, 5, CSound) 
+    }
+    
+    Welded:setPos(Origin + Magnitude * Progress)
+} elseif(dupefinished()) { 
+    reset() 
+} elseif(last() || removing()) { 
+    Welded:setAlpha(255)
+    Welded:setPos(Origin) 
+} 
+

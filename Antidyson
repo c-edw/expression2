@@ -1,0 +1,41 @@
+@name Antidyson
+@persist Allowed:array Range
+
+if(first()) {
+    Allowed = array(owner())
+    Range = 250
+    
+    holoCreate(1)
+    holoPos(1, entity():pos())
+    holoScale(1, vec(50))
+    holoModel(1, "icosphere3")
+    holoAlpha(1, 125)
+    holoParent(1, entity())
+    
+    holoCreate(2)
+    holoPos(2, entity():pos())
+    holoScale(2, vec(-50))
+    holoModel(2, "icosphere3")
+    holoAlpha(2, 125)
+    holoParent(2, entity())
+    
+    holoClipEnabled(1,2,1)
+    
+    findIncludeClass("player")
+    findExcludeEntities(Allowed)
+    findExcludeEntities(playersAdmins())
+    findExcludeEntities(playersSuperAdmins())
+}
+
+if(tickClk()) {
+    findInSphere(entity():pos(), Range + 50)
+    E = findToArray()
+    
+    for(I=1,E:count()) {
+        if(!E[I,entity]:isAlive()) { continue }
+        concmd("say @slay " + E[I,entity]:steamID())
+    }
+    
+    interval(250)
+    if(dupefinished()) { reset() }
+}

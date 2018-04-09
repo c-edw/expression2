@@ -1,0 +1,27 @@
+@persist E:entity Key Points:array I V:vector A:angle
+
+if(first()) {
+    runOnTick(1)
+    runOnKeys(owner(), 1)
+    
+    E = entity():isWeldedTo()
+}
+
+if(keyClk()) {
+    if(owner():keyPressed("PAD_5")) {
+        Points:pushVector(owner():aimPos() + vec(0, 0, 50))
+        
+        holoCreate(Points:count())
+        holoPos(Points:count(), Points[Points:count(), vector])   
+    }
+}
+
+if(tickClk()) {
+    I = I > Points:count() ? 1 : I + 0.1
+    
+    V = ((Points[I, vector] - (E:vel() / 150)) - E:pos()) * 250
+    A = (heading(Points[I, vector], ang(0, 0, 180), Points[I + 1, vector]) - E:angles() - E:angVel()) * 5 * E:inertia():length()
+    
+    E:applyForce($V * 10 + V)
+    E:applyAngForce(A)
+}

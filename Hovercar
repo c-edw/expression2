@@ -1,0 +1,55 @@
+@name Hovercar
+@persist Radius E:entity Z Turn Vector:vector Rotation:angle 
+@model models/hunter/plates/plate1x2.mdl
+
+if(first()) {
+    runOnTick(1)
+    
+    Radius = 16.25
+    
+    E = entity()
+    Z = E:pos():z()
+    
+    E:setMass(1000)
+    
+    Turn = pi() * Radius / 2
+    
+    Offsets = array(vec(-32,45,0), vec(-32,-45,0), vec(32,45,0), vec(32,-45,0))
+    
+    for(I=1, 4) {
+        holoCreate(I)
+        holoModel(I,"models/xeon133/racewheelskinny/race-wheel-80_s.mdl")
+        holoScale(I,vec(0.5))
+        holoPos(I,entity():toWorld(Offsets[I,vector]))
+        holoParent(I,entity())
+    }
+    
+    rangerPersist(1)
+    rangerHitEntities(0)
+}
+
+if(tickClk()) {
+    Ranger = rangerOffset(10000, E:pos(), vec(0,0,-1))
+    
+    Target = ((E:pos() - (E:vel() / 150)):setZ(Ranger:position():z() + 20) - E:pos()) * 6000
+    Target = Target:setZ(max(Target:z(), 0))
+    Vector = E:toWorldAxis(E:toLocalAxis(Target):setY(0))
+    
+    Angle = (-E:angles() * 15 - E:angVel() * 5):setYaw(-E:angVel():yaw() * 0.5)
+    Leverage = E:inertia():length()
+    
+    E:applyForce($Vector * 10 + Vector)
+    E:applyAngForce(Angle * Leverage)
+    
+    Rotation += ang(E:toLocalAxis(E:vel()):y() / Turn, 0, 0)
+    
+    for(I=1, 4) {
+        Angle = E:toWorld(Rotation + ang(0,90,I > 2 ? 180 : 0))
+        holoAng(I,Angle)
+    }
+}
+    
+    
+    
+    
+

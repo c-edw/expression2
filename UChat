@@ -1,0 +1,94 @@
+@name UChat
+@persist Group:string NameColour:vector Prefix:string Toggle:string
+@persist Key Enabled [UChatColour UChatGrey]:vector [JoinedEvent LeftEvent]:array
+  
+if(first() | dupefinished()) { 
+    # Username colour 
+    NameColour = vec(255, 200, 0)  
+                    
+    # Your prefix 
+    Prefix = ""                   
+    
+    # Toggle key
+    Toggle = "PAD_5"
+    
+    function array string:getMembers() {
+        return dsProbe(This)
+    }
+                    
+    function string:send(Action:string, Array:array){
+        printColor(Array)
+        dsSend(Action,This,Array)
+    }
+    
+    function string string:args(I) {
+        return This:explode(" ")[I, string]
+    }
+    
+    function number string:is(S:string) {
+        return This == S
+    }
+    
+    Group = hashNoComments():toString()
+    
+    runOnKeys(owner(), 1)
+    runOnChat(1)
+    runOnSignal("message", 2, 1)
+    runOnSignal("action", 2, 1)
+    
+    UChatColour = vec(255, 200, 0)
+    UChatGrey = vec(200, 200, 200)
+    
+    dsSetScope(2)
+    dsJoinGroup(Group)
+    owner():soundPlay("action", 0, "ui/buttonclickrelease.wav")
+    
+    printColor(UChatColour, "UChat: ", UChatGrey, "Welcome! Press '", Toggle, "' to get started.")
+    Group:send("action", array(UChatColour, "UChat: ", UChatGrey, "Player ", owner():name(), " joined the default channel."))
+}
+
+if(keyClk()) {
+    if(owner():keyPressed(Toggle)) {
+        Enabled = !Enabled
+        printColor(UChatColour, "UChat: ", UChatGrey, "Toggled UChat ", UChatColour, (Enabled ? "on" : "off"), UChatGrey, ".")
+    }
+}
+
+if(chatClk(owner())) {
+    Said = owner():lastSaid()
+    
+    if(Said:args(1):is("!disconnect")) {
+        Group:send("action", array(UChatColour, "UChat: ", UChatGrey, "Player ", owner():name(), " left channel '", Group, "'."))
+        selfDestruct()
+        
+    } elseif(Said:args(1):is("!list")) {
+        Players = Group:getMembers()
+        S = format("Connected players: %s", owner():name())
+        for(I=1, Players:count()) {
+            S = format("%s, %s", S, Players[I,entity]:owner():name())
+        }
+        printColor(UChatColour, "UChat: ", UChatGrey, S, ".")
+        
+    } elseif(Said:args(1):is("!connect")) {
+        Group:send("action", array(UChatColour, "UChat: ", UChatGrey, "Player ", owner():name(), " left channel '", Group, "'."))
+        dsLeaveGroup(Group)
+        Group = Said:args(2)
+        dsJoinGroup(Group)
+        Group:send("action", array(UChatColour, "UChat: ", UChatGrey, "Player ", owner():name(), " joined channel '", Group, "'."))
+        
+    } elseif(Said:args(1):is("!curtime")) {
+        printColor(UChatColour, "UChat: ", UChatGrey ,"Current server uptime: ", round(realtime() / 60, 0), " minutes.")
+    } elseif(Said:args(1):is("!channel")) {
+        printColor(UChatColour, "UChat: ", UChatGrey, "Channel: '", Group, "'.")
+    } elseif(Enabled){
+        Group:send("message", array(NameColour, format("%s%s", Prefix, " ":repeat(Prefix:length() > 0)), owner():name(), UChatGrey, ": ", owner():lastSaid()))
+    }
+    
+    hideChat(Enabled)
+}
+
+if(dsClk("message") || dsClk("action")){
+    printColor(array("  "):add(dsGetArray()))
+    Sound = (dsClkName():is("message")) ? "ui/buttonrollover.wav" : "ui/buttonclickrelease.wav"
+    owner():soundPlay("message", 0, Sound)
+}

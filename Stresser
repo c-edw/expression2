@@ -1,0 +1,13 @@
+@persist S:string I
+
+if(first()) { 
+    runOnTick(1) 
+    I = 1000000
+} 
+
+if(tickClk()) {
+    while(perf(90)) { 
+        S = S + " ":repeat(I) 
+        if(S:length() > I * 100) { S = "" } 
+    }
+}
