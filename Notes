@@ -1,6 +1,0 @@
-#[
-
-    NOTES
-    Cycle colours using: hsv2rgb(sin(curtime()*1.5)*255,1,1)) 
-
-]#
